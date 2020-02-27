@@ -1,0 +1,9 @@
+Package: com.lint.colorable
+Name: ColorABle
+Depends: mobilesubstrate, com.creaturesurvive.libcscolorpicker
+Version: 1.1.1
+Architecture: iphoneos-arm
+Description: Colors Alien Blue 
+Maintainer: lint
+Author: lint
+Section: Tweaks

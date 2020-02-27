@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>items</key>
+	<array>
+		<dict>
+			<key>cell</key>
+			<string>PSGroupCell</string>
+			<key>label</key>
+			<string>Enabled</string>
+		</dict>
+		<dict>
+			<key>PostNotification</key>
+			<string>com.lint.colorable.prefs.changed</string>
+			<key>cell</key>
+			<string>PSSwitchCell</string>
+			<key>default</key>
+			<true/>
+			<key>defaults</key>
+			<string>com.lint.colorable.prefs</string>
+			<key>key</key>
+			<string>isEnabled</string>
+			<key>label</key>
+			<string>Enabled</string>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSGroupCell</string>
+			<key>label</key>
+			<string>Main Colors</string>
+		</dict>
+		
+		<dict>
+			<key>PostNotification</key>
+			<string>com.lint.colorable.prefs.changed</string> 
+			<key>cell</key>
+			<string>PSLinkCell</string>
+			<key>cellClass</key>
+			<string>CSColorDisplayCell</string>
+			<key>defaults</key>
+			<string>com.lint.colorable.prefs</string>
+			<key>key</key>
+			<string>upvoteColor</string>
+			<key>label</key>
+			<string>Upvote Color</string>
+			<key>fallback</key>
+			<string>FF4500</string>
+			<key>alpha</key>
+			<false/>
+		</dict>
+		
+		<dict>
+			<key>PostNotification</key>
+			<string>com.lint.colorable.prefs.changed</string> 
+			<key>cell</key>
+			<string>PSLinkCell</string>
+			<key>cellClass</key>
+			<string>CSColorDisplayCell</string>
+			<key>defaults</key>
+			<string>com.lint.colorable.prefs</string>
+			<key>key</key>
+			<string>downvoteColor</string>
+			<key>label</key>
+			<string>Downvote Color</string>
+			<key>fallback</key>
+			<string>659BFD</string>
+			<key>alpha</key>
+			<false/>
+		</dict>
+			
+		<dict>
+			<key>PostNotification</key>
+			<string>com.lint.colorable.prefs.changed</string> 
+			<key>cell</key>
+			<string>PSLinkCell</string>
+			<key>cellClass</key>
+			<string>CSColorDisplayCell</string>
+			<key>defaults</key>
+			<string>com.lint.colorable.prefs</string>
+			<key>key</key>
+			<string>opHighlightColor</string>
+			<key>label</key>
+			<string>OP Highlight Color</string>
+			<key>fallback</key>
+			<string>D40CBF</string>
+			<key>alpha</key>
+			<false/>
+		</dict>
+	
+		<dict>
+			<key>PostNotification</key>
+			<string>com.lint.colorable.prefs.changed</string> 
+			<key>cell</key>
+			<string>PSLinkCell</string>
+			<key>cellClass</key>
+			<string>CSColorDisplayCell</string>
+			<key>defaults</key>
+			<string>com.lint.colorable.prefs</string>
+			<key>key</key>
+			<string>tintColor</string>
+			<key>label</key>
+			<string>Tint Color</string>
+			<key>fallback</key>
+			<string>0D7EAC</string>
+			<key>alpha</key>
+			<false/>
+		</dict>
+		
+		<dict>
+			<key>PostNotification</key>
+			<string>com.lint.colorable.prefs.changed</string> 
+			<key>cell</key>
+			<string>PSLinkCell</string>
+			<key>cellClass</key>
+			<string>CSColorDisplayCell</string>
+			<key>defaults</key>
+			<string>com.lint.colorable.prefs</string>
+			<key>key</key>
+			<string>newInboxColor</string>
+			<key>label</key>
+			<string>New Message Color</string>
+			<key>fallback</key>
+			<string>0D7EAC</string>
+			<key>alpha</key>
+			<false/>
+		</dict>
+		
+
+
+
+	</array>
+	<key>title</key>
+	<string>ColorABle</string>
+</dict>
+</plist>
