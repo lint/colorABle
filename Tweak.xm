@@ -1,12 +1,123 @@
 
-//made for u/completebunk
-
 #import "UIColor+CSColorPicker.h"
+
+
+@interface CABHeaderView : UIView
+@property(strong, nonatomic) UIImageView *arrowImageView;
+@property(strong, nonatomic) UILabel *authorLabel;
+@property(strong, nonatomic) UILabel *flairLabel;
+@property(strong, nonatomic) UILabel *rightInfoLabel;
+@property(strong, nonatomic) UIImageView *circleImage;
+@end
+
+@implementation CABHeaderView
+
+@synthesize arrowImageView, authorLabel, flairLabel, rightInfoLabel, circleImage;
+
+-(id) initWithFrame:(CGRect) frame{
+	self = [super initWithFrame:frame];
+	
+	if (self){
+		
+		[self setUserInteractionEnabled:NO];
+		
+		arrowImageView = [[UIImageView alloc] initWithImage:nil];
+		authorLabel = [[UILabel alloc] initWithFrame:CGRectMake(0,0,0,0)];
+		flairLabel = [[UILabel alloc] initWithFrame:CGRectMake(0,0,0,0)];
+		rightInfoLabel = [[UILabel alloc] initWithFrame:CGRectMake(0,0,0,0)];
+		//circleImage = [[UIImageView alloc] initWithImage:nil];
+		
+		[arrowImageView setUserInteractionEnabled:NO];
+		[authorLabel setUserInteractionEnabled:NO];
+		[flairLabel setUserInteractionEnabled:NO];
+		[rightInfoLabel setUserInteractionEnabled:NO];
+		//[circleImage setUserInteractionEnabled:NO];
+		
+		[self addSubview:arrowImageView];
+		[self addSubview:authorLabel];
+		[self addSubview:flairLabel];
+		[self addSubview:rightInfoLabel];
+		//[self addSubview:circleImage];
+	}
+	
+	return self;
+}
+
+@end
 
 @interface ABToolbar : UIToolbar
 @end
 
 @interface TransparentToolbar: ABToolbar
+@end
+
+@interface ABBundleManager
++(id) sharedManager;
+-(id) createFontForKey:(id) arg1;
+@end
+
+@interface VoteableElement
+@property(strong, nonatomic) NSString *author;
+@property(strong, nonatomic) NSString *formattedScore;
+@property(strong, nonatomic) NSString *formattedScoreTiny;
+@property(strong, nonatomic) NSString *formattedScoreTinyWithPlus;
+@property(strong, nonatomic) NSString *formattedScoreWithText;
+@property(strong, nonatomic) NSString *tinyTimeAgo;
+@property(assign, nonatomic) BOOL isFromAdmin;
+@property(assign, nonatomic) BOOL isFromModerator;
+@property(assign, nonatomic) BOOL isMine;
+@property(assign, nonatomic) int voteState;
+@end
+
+@interface Comment : VoteableElement
+@property(strong, nonatomic) NSString *flairText;
+@end
+
+@interface Post : VoteableElement
+@end
+
+@interface CommentNode
+@property(strong, nonatomic) Comment *comment;
+@property(strong, nonatomic) Post *post;
+@property(assign, nonatomic) BOOL isContext;
+
+//custom elements
+@property(assign, nonatomic) CGFloat leftPad;
+@property(assign, nonatomic) BOOL hasLeftPad;
+@end
+
+@interface NCommentCell : UIView
+@property(strong, nonatomic) id headerBar;
+@property(strong, nonatomic) id threadLinesOverlay;
+@property(strong, nonatomic) id dottedLineSeparatorOverlay;
+@property(strong, nonatomic) id drawerView;
+@property(strong, nonatomic) Comment *comment;
+@property(assign, nonatomic) BOOL selected;
+
+//custom elements
+@property(strong, nonatomic) CABHeaderView *cabHeaderView;
+-(void) createCABHeaderView;
+@end
+
+@interface JMViewOverlay
+@property(assign, nonatomic) CGFloat left;
+@property(assign, nonatomic) CGRect frame;
+@end
+
+@interface CommentHeaderBarOverlay : JMViewOverlay
+@property(strong, nonatomic) CommentNode *commentNode;
+@property(assign, nonatomic) BOOL collapsed;
+@property(assign, nonatomic) CGRect frame;
+@property(assign, nonatomic) CGRect initialFrame;
+@property(assign, nonatomic) CGRect initialParentBounds;
+@property(assign, nonatomic) CGFloat horizontalPadding;
+
+//custom elements
+@property(strong, nonatomic) NCommentCell *nCommentCell;
+@end
+
+@interface ThreadLinesOverlay : JMViewOverlay
+@property(assign, nonatomic) NSUInteger level;
 @end
 
 @interface UIImage (AverageColor)
@@ -86,7 +197,6 @@ static BOOL colorsAreEqual(UIColor* color1, UIColor *color2){
 //username highlight color when getting context
 +(id) colorWithCGColor:(CGColorRef) arg1{
 	
-	%log;
 	id orig = %orig;
 	
 	UIColor *compColor = [UIColor colorWithRed:183.0/255 green:106.0/255 blue:255.0/255 alpha:1.0];
@@ -97,6 +207,7 @@ static BOOL colorsAreEqual(UIColor* color1, UIColor *color2){
 	
 	return orig;
 }
+
 
 %end
 
@@ -135,6 +246,7 @@ static BOOL colorsAreEqual(UIColor* color1, UIColor *color2){
 
 %end
 
+
 //Upvote arrow color in top nav bar
 %hook TransparentToolbar
 
@@ -163,6 +275,7 @@ static BOOL colorsAreEqual(UIColor* color1, UIColor *color2){
 %end
 
 
+//Header 4 and show table colors
 %hook Comment
 
 -(id) styledBody{
@@ -212,6 +325,233 @@ static BOOL colorsAreEqual(UIColor* color1, UIColor *color2){
 	else{
 		
 		return orig;
+	}
+}
+
+%end
+
+
+%hook CommentNode 
+%property(assign, nonatomic) CGFloat leftPad;
+%property(assign, nonatomic) BOOL hasLeftPad;
+
+-(id) initWithComment:(id) arg1 level:(NSUInteger) arg2{
+	id orig = %orig;
+	
+	[orig setHasLeftPad:NO];
+	[orig setLeftPad:-1];
+	
+	return orig;
+}
+
+%end
+
+
+%hook CommentHeaderBarOverlay
+%property(strong, nonatomic) NCommentCell *nCommentCell;
+
+-(void) drawRect:(CGRect) arg1{
+	//%orig;
+	[[self nCommentCell] createCABHeaderView];
+}
+
+%end
+
+
+%hook NCommentCell
+%property(strong, nonatomic) CABHeaderView *cabHeaderView;
+
+-(void) layoutCellOverlays{
+	%orig;
+	
+	[[self headerBar] setNCommentCell:self];
+}
+
+//Recreating the comment header overlay from scratch
+%new
+-(void) createCABHeaderView{
+	
+	CommentHeaderBarOverlay *headerOverlay = [self headerBar];
+	JMViewOverlay *dottedSepOverlay = [self dottedLineSeparatorOverlay];
+	
+	CommentNode *commentNode = [headerOverlay commentNode];
+	Comment *comment = [self comment];
+	
+	BOOL hasDrawer = NO;
+	BOOL isCollapsed = NO;
+	
+	if ([self drawerView]){
+		hasDrawer = YES;
+	}
+	
+	if ([headerOverlay collapsed]){
+		isCollapsed = YES;
+	}
+	
+	CABHeaderView *cabHeaderView  = [self cabHeaderView]; 
+	
+	if (!cabHeaderView){
+		cabHeaderView = [[%c(CABHeaderView) alloc] initWithFrame:CGRectMake(0,0,0,0)];
+		[self setCabHeaderView:cabHeaderView];
+		[self addSubview:cabHeaderView];
+	}
+	
+	CGFloat cabXOrigin;
+	
+	
+
+	if ([commentNode hasLeftPad]){
+		cabXOrigin = [commentNode leftPad];
+	} else {
+		if (hasDrawer){
+			cabXOrigin = 22 * [[self threadLinesOverlay] level] + 12;
+		} else {
+			CGFloat newLeftPad = [dottedSepOverlay left];
+			cabXOrigin = newLeftPad;
+			[commentNode setLeftPad:newLeftPad];
+			[commentNode setHasLeftPad:YES];
+		}
+	}
+		
+	CGRect overlayFrame = [headerOverlay frame];
+	CGRect cabFrame = CGRectMake(cabXOrigin, overlayFrame.origin.y, self.frame.size.width - cabXOrigin - 15, overlayFrame.size.height);
+	cabHeaderView.frame = cabFrame;
+
+	UIColor *textColor = tintColor; 
+	UIColor *rightTextColor = [UIColor colorWithRed:128.0/255 green:128.0/255 blue:128.0/255 alpha:1.0];
+	UIColor *collapsedColor = [UIColor colorWithRed:170.0/255 green:170.0/255 blue:170.0/255 alpha:1.0];
+	UIColor *flairTextColor = [UIColor colorWithRed:153.0/255 green:153.0/255 blue:153.0/255 alpha:1.0];
+	UIColor *flairBackgroundColor = [UIColor colorWithRed:233.0/255 green:234.0/255 blue:235.0/255 alpha:1.0];
+	
+	ABBundleManager *bundleManager = [%c(ABBundleManager) sharedManager];
+	UIFont *headerFont = [bundleManager createFontForKey:@"kBundleFontCommentSubdetails"];
+
+	//arrow indicator part
+	UIImageView *arrowImageView = [cabHeaderView arrowImageView];
+	UIImage *arrowImage;
+	
+	if (isCollapsed){
+		arrowImage = [UIImage imageWithContentsOfFile:@"/Library/PreferenceBundles/colorABlePrefs.bundle/arrow_right.png"];
+		arrowImage = [[UIImage imageWithCGImage:[arrowImage CGImage] scale:(arrowImage.scale * 4.0) orientation:(arrowImage.imageOrientation)] imageWithRenderingMode:UIImageRenderingModeAlwaysTemplate];		
+		arrowImageView.tintColor = collapsedColor;
+	} else {
+		arrowImage = [UIImage imageWithContentsOfFile:@"/Library/PreferenceBundles/colorABlePrefs.bundle/arrow_down.png"];
+		arrowImage = [[UIImage imageWithCGImage:[arrowImage CGImage] scale:(arrowImage.scale * 4.0) orientation:(arrowImage.imageOrientation)] imageWithRenderingMode:UIImageRenderingModeAlwaysTemplate];		
+		arrowImageView.tintColor = tintColor;
+	}
+	
+	CGSize arrowImageSize = arrowImage.size;
+
+	arrowImageView.image = arrowImage;
+	arrowImageView.frame = CGRectMake(0, (cabFrame.size.height - arrowImageSize.height) / 2, arrowImageSize.width , arrowImageSize.height);
+	
+	//author and distinguished part
+	NSMutableAttributedString *authorText = [[NSMutableAttributedString alloc] initWithString:[[comment author] stringByAppendingString:@" "]];
+	NSString *distText;
+	
+	if ([[comment author] isEqualToString:[[commentNode post] author]]){
+		textColor = opHighlightColor;
+		arrowImageView.tintColor = opHighlightColor;
+		distText = @" op";
+	} else if ([comment isFromAdmin]){
+		textColor = opHighlightColor;
+		arrowImageView.tintColor = opHighlightColor;
+		distText = @" a";
+	} else if ([comment isFromModerator]){
+		textColor = opHighlightColor;
+		arrowImageView.tintColor = opHighlightColor;
+		distText = @" m";
+	} else if ([commentNode isContext]){
+		textColor = opHighlightColor;
+		arrowImageView.tintColor = opHighlightColor;
+	} 
+	if ([comment isMine]){
+		textColor = opHighlightColor;
+		arrowImageView.tintColor = opHighlightColor;
+		distText = nil;
+	}
+	
+	if (distText){
+		
+		UIImage *dottedLineImage = [UIImage imageWithContentsOfFile:@"/Library/PreferenceBundles/colorABlePrefs.bundle/dotted_line_2.png"];
+		dottedLineImage = [[UIImage imageWithCGImage:[dottedLineImage CGImage] scale:(dottedLineImage.scale * 4) orientation:(dottedLineImage.imageOrientation)] imageWithRenderingMode:UIImageRenderingModeAlwaysTemplate];
+		
+		NSTextAttachment *dottedLineAttachment = [NSTextAttachment alloc];
+		dottedLineAttachment.image = dottedLineImage;
+		
+		CGFloat mid = headerFont.descender + headerFont.capHeight;
+		dottedLineAttachment.bounds = CGRectIntegral(CGRectMake(0, headerFont.descender - dottedLineImage.size.height / 2 + mid + 2, dottedLineImage.size.width, dottedLineImage.size.height));
+		
+		NSAttributedString *dottedLineString = [NSAttributedString attributedStringWithAttachment:dottedLineAttachment];
+		[authorText appendAttributedString:dottedLineString];
+		
+		NSAttributedString *distAttributedString = [[NSAttributedString alloc] initWithString:distText];
+		[authorText appendAttributedString:distAttributedString];
+		
+	} else if (isCollapsed){
+		textColor = collapsedColor;
+	}
+	
+	[authorText addAttribute:NSFontAttributeName value:headerFont range:NSMakeRange(0, authorText.length)];
+	
+	UILabel *authorLabel = [cabHeaderView authorLabel];
+	authorLabel.textColor = textColor;
+	authorLabel.attributedText = authorText;
+	
+	CGRect authorTextRect = [authorText boundingRectWithSize:CGSizeMake(CGFLOAT_MAX, cabFrame.size.height) options:NSStringDrawingUsesLineFragmentOrigin | NSStringDrawingUsesFontLeading context:nil];
+	authorLabel.frame = CGRectIntegral(CGRectMake(arrowImageView.frame.size.width + 10, 0, authorTextRect.size.width, cabFrame.size.height));
+	
+	//right info (vote status and time ago) part
+	UILabel *rightInfoLabel = [cabHeaderView rightInfoLabel];
+	
+	NSMutableAttributedString *rightText = [[NSMutableAttributedString alloc] initWithString:[comment formattedScoreTinyWithPlus]];
+	
+	if (hasDrawer){
+		NSAttributedString *timeAgoText = [[NSAttributedString alloc] initWithString:[@" ∙ " stringByAppendingString:[comment tinyTimeAgo]]];
+		[rightText appendAttributedString:timeAgoText];
+	}
+	
+	if ([comment voteState] == 1){
+		rightTextColor = upvoteColor;
+	} else if ([comment voteState] == -1){
+		rightTextColor = downvoteColor;
+	}
+	
+	if (isCollapsed){
+		rightTextColor = collapsedColor;
+	}
+	
+	[rightText addAttribute:NSFontAttributeName value:headerFont range:NSMakeRange(0, rightText.length)];
+	
+	rightInfoLabel.textColor = rightTextColor;
+	rightInfoLabel.attributedText = rightText;
+	
+	CGRect rightTextRect = [rightText boundingRectWithSize:CGSizeMake(CGFLOAT_MAX, cabFrame.size.height) options:NSStringDrawingUsesLineFragmentOrigin | NSStringDrawingUsesFontLeading context:nil];
+	rightInfoLabel.frame = CGRectIntegral(CGRectMake(cabFrame.size.width - rightTextRect.size.width, 0, rightTextRect.size.width, cabFrame.size.height));
+	
+	//flair part
+	NSString *flairText = [comment flairText];
+	UILabel *flairLabel = [cabHeaderView flairLabel];
+	
+	if (![flairText isEqualToString:@""]){
+		
+		NSMutableAttributedString *flairAttributedString = [[NSMutableAttributedString alloc] initWithString:[NSString stringWithFormat:@"  %@  ", flairText]];
+		
+		[flairAttributedString addAttribute:NSFontAttributeName value:headerFont range:NSMakeRange(0, flairAttributedString.length)];
+		
+		flairLabel.textColor = flairTextColor;
+		flairLabel.backgroundColor = flairBackgroundColor;
+		
+		flairLabel.attributedText = flairAttributedString;
+		
+		CGRect flairTextRect = [flairAttributedString boundingRectWithSize:CGSizeMake(rightInfoLabel.frame.origin.x - (authorLabel.frame.origin.x + authorLabel.frame.size.width) - 35, cabFrame.size.height - 10) options:NSStringDrawingUsesLineFragmentOrigin | NSStringDrawingUsesFontLeading context:nil];
+		flairLabel.frame = CGRectIntegral(CGRectMake(authorLabel.frame.origin.x + authorLabel.frame.size.width + 10, (cabFrame.size.height - (cabFrame.size.height - 10)) / 2, flairTextRect.size.width, cabFrame.size.height - 10));
+		
+		flairLabel.layer.cornerRadius = 5;
+		flairLabel.layer.masksToBounds = YES;
+	} else {
+		flairLabel.frame = CGRectMake(0,0,0,0);
+		flairLabel.attributedText = nil;
 	}
 }
 
@@ -271,6 +611,8 @@ static void prefsChanged(CFNotificationCenterRef center, void *observer, CFStrin
 
 
 %ctor {
+	HBLogDebug(@"start");
+	
 	loadPrefs();
 	
 	if (isEnabled){

@@ -1,4 +1,4 @@
-ARCHS = arm64 arm64e
+ARCHS = armv7 armv7s arm64 arm64e
 
 include $(THEOS)/makefiles/common.mk
 
@@ -6,7 +6,6 @@ TWEAK_NAME = colorABle
 colorABle_FILES = Tweak.xm $(wildcard ./*.m)
 colorABle_CFLAGS += -fobjc-arc
 colorABle_LDFLAGS += -lCSColorPicker
-#colorABle_LIBRARIES = colorpicker
 
 
 include $(THEOS_MAKE_PATH)/tweak.mk
