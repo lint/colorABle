@@ -49,6 +49,7 @@
 @end
 
 @interface TransparentToolbar: ABToolbar
+@property(strong, nonatomic) id parentFocusEnvironment;
 @end
 
 @interface ABBundleManager
@@ -120,12 +121,20 @@
 @property(assign, nonatomic) NSUInteger level;
 @end
 
-@interface UIImage (AverageColor)
+@interface NavigationManager
+@property(strong, nonatomic) Post *lastVisitedPost;
+@end
+
+@interface UIImage (CABThings)
+@property(strong, nonatomic) NSString *isCABInboxImage;
 -(UIColor *) averageColor;
 @end
 
 //from http://www.bobbygeorgescu.com/2011/08/finding-average-color-of-uiimage/
-@implementation UIImage (AverageColor) 
+@implementation UIImage (CABThings) 
+
+@dynamic isCABInboxImage;
+
 -(UIColor *) averageColor{
 	
 	CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
@@ -213,6 +222,11 @@ static BOOL colorsAreEqual(UIColor* color1, UIColor *color2){
 
 
 //New mail alert
+%hook UIImage
+%property(strong, nonatomic) NSString *isCABInboxImage;
+%end
+
+
 %hook ABToolbar
 
 -(void) handleTintSwitch{
@@ -227,20 +241,34 @@ static BOOL colorsAreEqual(UIColor* color1, UIColor *color2){
 			UIButton *button = (UIButton *)view;
 			
 			UIImage *image = button.currentImage;
-			UIColor *avgColor = [image averageColor];
 			
-			if (colorsAreEqual(avgColor, [UIColor colorWithRed:0.109804 green:0.0470588 blue:0.0392157 alpha:0.117647])){	
-				
-				UIImage *newImage = [UIImage imageWithContentsOfFile:@"/Library/PreferenceBundles/colorABlePrefs.bundle/newmail.png"];
-				newImage = [UIImage imageWithCGImage:[newImage CGImage] scale:2.0 orientation:UIImageOrientationUp];
-				newImage = [newImage imageWithRenderingMode:UIImageRenderingModeAlwaysTemplate];
-				
-				[button setImage:newImage forState:UIControlStateNormal];
-				[button setTintColor:inboxColor];
-				
-				break;
+			if ([[image isCABInboxImage] isEqualToString:@"YES"]){
+				button.tintColor = inboxColor;
 			}
 		}
+	}
+}
+
+%end
+
+
+%hook ABBundleManager
+
+-(id) imageNamed:(id) arg1{
+	%log;
+	
+	if ([arg1 isEqualToString:@"generated/orangered-icon"]){
+		
+		UIImage *mailImg = [UIImage imageWithContentsOfFile:@"/Library/PreferenceBundles/colorABlePrefs.bundle/newmail_2.png"];
+		mailImg = [UIImage imageWithCGImage:[mailImg CGImage] scale:3.0 orientation:UIImageOrientationUp];
+		mailImg = [mailImg imageWithRenderingMode:UIImageRenderingModeAlwaysTemplate];
+		
+		[mailImg setIsCABInboxImage:@"YES"];
+		
+		return mailImg;
+		
+	} else {
+		return %orig;
 	}
 }
 
@@ -255,18 +283,22 @@ static BOOL colorsAreEqual(UIColor* color1, UIColor *color2){
 	
 	NSArray *items = [self items];
 	
-	for (UIBarButtonItem *item in items){
-		UIView *view = [item customView];
+	if ([items count] == 5){
 		
-		if ([view isKindOfClass:[UIButton class]]){
+		UIView *customView = [items[3] customView];
+		if ([customView isKindOfClass:[UIButton class]]){
+			UIButton *upvoteButton = (UIButton *)customView;
+
+			NSSet *allTargets = [upvoteButton allTargets];
 			
-			UIButton *button = (UIButton *)view;
-			UIImage *btnImage = [button currentImage];
-			UIColor *avgColor = [btnImage averageColor];
-			
-			if (colorsAreEqual(avgColor, [UIColor colorWithRed:0.0352941 green:0.0196078 blue:0.00784314 alpha:0.0])){
-				[button setImage:[button.currentImage imageWithRenderingMode:UIImageRenderingModeAlwaysTemplate] forState:UIControlStateNormal] ;
-				[button setTintColor:upvoteColor];
+			for (id target in allTargets){
+				if ([target isKindOfClass:[%c(NavigationManager) class]]){
+					Post *post = [target lastVisitedPost];
+					if ([post voteState] == 1){
+						[upvoteButton setImage:[upvoteButton.currentImage imageWithRenderingMode:UIImageRenderingModeAlwaysTemplate] forState:UIControlStateNormal] ;
+						[upvoteButton setTintColor:upvoteColor];
+					}
+				}
 			}
 		}
 	}
@@ -507,7 +539,7 @@ static BOOL colorsAreEqual(UIColor* color1, UIColor *color2){
 	NSMutableAttributedString *rightText = [[NSMutableAttributedString alloc] initWithString:[comment formattedScoreTinyWithPlus]];
 	
 	if (hasDrawer){
-		NSAttributedString *timeAgoText = [[NSAttributedString alloc] initWithString:[@" ∙ " stringByAppendingString:[comment tinyTimeAgo]]];
+		NSAttributedString *timeAgoText = [[NSAttributedString alloc] initWithString:[@" • " stringByAppendingString:[comment tinyTimeAgo]]];
 		[rightText appendAttributedString:timeAgoText];
 	}
 	
